@@ -14,7 +14,6 @@
 		</style>
 	</head>
 	<body>
-	<button id="start" style="width: 40%; height: 10%; margin: auto; background-color: blue; border-radius: 5px; position: absolute;">start</button>
 	<canvas id="canvas"></canvas>
 	<script src="https://cdn.babylonjs.com/babylon.js"></script>
 	<script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
@@ -69,13 +68,6 @@
 		 scene.render();
 		}
 
-		start.addEventListener("click", function(){
-		start.style.visibility = "hidden";
-		engine.runRenderLoop(renderLoop);
-		engine.switchFullscreen(true);
-		engine.enterPointerlock()
-		});
-
 		window.addEventListener("resize", function(){
 		canvas.width = window.width;
 		canvas.height = window.height;
@@ -98,6 +90,9 @@
 				canvas.style.height = currentCanvasSizeHeight;
 				engine.resize(true);       
 		});}})
+		engine.runRenderLoop(renderLoop);
+		engine.switchFullscreen(true);
+		engine.enterPointerlock()
 	</script>
 	</body>
 </html>

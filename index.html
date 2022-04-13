@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Zombie Game</title>
+		<style>
+			body { margin: 0; }
+			html, body, canvas{
+				margin: 0;
+				padding: 0;
+				width: 100%;
+				height: 100%;
+			}
+		</style>
+	</head>
+	<body>
+	<button id="start" style="width: 40%; height: 10%; margin: auto; background-color: blue; border-radius: 5px; position: absolute;">start</button>
+	<canvas id="canvas"></canvas>
+	<script src="https://cdn.babylonjs.com/babylon.js"></script>
+	<script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+	<script src="https://cdn.babylonjs.com/loaders/babylon.objFileLoader.js"></script>
+	<script src="https://cdn.babylonjs.com/loaders/babylon.glTFFileLoader.js"></script>
+	<script src="https://cdn.babylonjs.com/cannon.js"></script>
+	<script>
+		const start = document.getElementById("start");
+		const canvas = document.getElementById("canvas");
+		canvas.width = window.width;
+		canvas.height = window.height;
+		const engine = new BABYLON.Engine(canvas);
+		const scene = new BABYLON.Scene(engine);
+		scene.collisionsEnabled = true;
+		const assumedFramesPerSecond = 60;
+		const earthGravity = -9.81;
+		scene.gravity = new BABYLON.Vector3(0, earthGravity / assumedFramesPerSecond, 0);
+		scene.clearColor = new BABYLON.Color3(0.6,0.6,0.6);
+
+		var camera = new BABYLON.UniversalCamera("camera", new BABYLON.Vector3(1,-10,-10),scene);
+		scene.activeCamera = camera;
+		scene.activeCamera.setTarget(new BABYLON.Vector3(0, -11.5, 0));
+		scene.activeCamera.attachControl(canvas, true);
+
+		scene.activeCamera.keysUp.push(87);
+		scene.activeCamera.keysDown.push(83);
+		scene.activeCamera.keysLeft.push(65);
+		scene.activeCamera.keysRight.push(68);
+
+		scene.activeCamera.speed = 2;
+		scene.activeCamera.fov = 0.8;
+		scene.activeCamera.inertia = 0;
+
+		scene.activeCamera.applyGravity = true;
+		scene.activeCamera.checkCollisions = true;
+
+		camera.ellipsoid = new BABYLON.Vector3(1, 0.5, 1);
+
+		var hemi_light = new BABYLON.HemisphericLight("HemiLight", new BABYLON.Vector3(-65, -100, 30), scene);
+		var directional_light = new BABYLON.DirectionalLight("DirectionalLight", new BABYLON.Vector3(-70, 50, 300), scene);
+
+		var skybox = BABYLON.SceneLoader.Append("https://fightingox1.github.io/image_library/", "scene.obj", scene, function(obj){
+		});
+
+		BABYLON.OBJFileLoader.INVERT_Y = true;
+		var map = BABYLON.SceneLoader.Append("https://fightingox1.github.io/image_library/", "tinker.obj", scene, function(scene){
+		for(var i = 0; i < scene.meshes.length; i++){
+		scene.meshes[i].checkCollisions = true;
+		}});
+
+		function renderLoop(){
+		 scene.render();
+		}
+
+		start.addEventListener("click", function(){
+		start.style.visibility = "hidden";
+		engine.runRenderLoop(renderLoop);
+		engine.switchFullscreen(true);
+		engine.enterPointerlock()
+		});
+
+		window.addEventListener("resize", function(){
+		canvas.width = window.width;
+		canvas.height = window.height;
+		engine.resize();
+		});
+
+		document.addEventListener("keydown", function(e){
+		if(e.key == "q"){console.log(scene.activeCamera.position.y)}
+		if(e.key == "f"){
+		var renderWidth = 1120;
+		var renderHeight = 1575
+
+		var currentCanvasSizeWidth = canvas.style.width;
+		var currentCanvasSizeHeight = canvas.style.height;
+		canvas.style.width = renderWidth + "px";
+		canvas.style.height = renderHeight + "px";
+		engine.resize(true);
+		BABYLON.ScreenshotTools.CreateScreenshotWithResizeAsync(engine, scene.activeCamera, renderWidth, renderHeight).then(() => {
+				canvas.style.width = currentCanvasSizeWidth;
+				canvas.style.height = currentCanvasSizeHeight;
+				engine.resize(true);       
+		});}})
+	</script>
+	</body>
+</html>

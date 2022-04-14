@@ -21,13 +21,31 @@
 	<script src="https://cdn.babylonjs.com/loaders/babylon.glTFFileLoader.js"></script>
 	<script src="https://cdn.babylonjs.com/cannon.js"></script>
 	<script>
-var gun;
-var canvas = document.getElementById("canvas");
+const canvas = document.getElementById("canvas");
 canvas.width = window.width;
 canvas.height = window.height;
 const engine = new BABYLON.Engine(canvas);
 const scene = new BABYLON.Scene(engine);
 scene.clearColor = new BABYLON.Color3(0.6,0.6,0.6);
+
+    var isLocked = false;
+    scene.onPointerDown = function (evt) {
+        if (!isLocked) {
+            canvas.requestPointerLock = canvas.requestPointerLock || canvas.msRequestPointerLock || canvas.mozRequestPointerLock || canvas.webkitRequestPointerLock;
+            if (canvas.requestPointerLock) {
+                canvas.requestPointerLock();}}evt.preventDefault()};
+    var pointerlockchange = function () {
+        var controlEnabled = document.mozPointerLockElement || document.webkitPointerLockElement || document.msPointerLockElement || document.pointerLockElement || null;
+        if (!controlEnabled) {
+            isLocked = false;
+        } else {
+            isLocked = true;
+        }
+    };
+    document.addEventListener("pointerlockchange", pointerlockchange, false);
+    document.addEventListener("mspointerlockchange", pointerlockchange, false);
+    document.addEventListener("mozpointerlockchange", pointerlockchange, false);
+    document.addEventListener("webkitpointerlockchange", pointerlockchange, false);
 
 var camera = new BABYLON.UniversalCamera("camera", new BABYLON.Vector3(1,-10,-10),scene);
 
@@ -70,37 +88,6 @@ function renderLoop(){
  scene.render();
 }
 
-canvas.requestPointerLock = canvas.requestPointerLock || canvas.mozRequestPointerLock;
-document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
-
-canvas.onclick = function() {
-  canvas.requestPointerLock();
-}
-
-document.addEventListener('pointerlockchange', lockChangeAlert, false);
-document.addEventListener('mozpointerlockchange', lockChangeAlert, false);
-
-function lockChangeAlert() {
-  if(document.pointerLockElement === canvas ||
-  document.mozPointerLockElement === canvas) {
-    console.log('The pointer lock status is now locked');
-    document.addEventListener("mousemove", canvasLoop, false);
-  } else {
-    console.log('The pointer lock status is now unlocked');  
-    document.removeEventListener("mousemove", canvasLoop, false);
-  }
-}
-
-
-function canvasLoop(e) {
-  var movementX = e.movementX || e.mozMovementX || 0;
-  var movementY = e.movementY || e.mozMovementY ||  0;
-  x += movementX;
-  y += movementY; 
-  canvasDraw();
-  console.log("X position: " + x + ', Y position: ' + y);
-}
-
 window.addEventListener("resize", function(){
 canvas.width = window.width;
 canvas.height = window.height;
@@ -108,12 +95,13 @@ engine.resize();
 });
 
 document.addEventListener("keydown", function(e){
-if(e.key == "q"){engine.switchFullscreen(true);}
+if(e.key == "q"){engine.switchFullscreen(true); engine.enterPointerlock();}
 if(e.key == "f"){
 var ss = BABYLON.Tools.CreateScreenshot(engine, camera, 400);
 console.log(ss, 'ok');
 }
 });
+
 
 engine.runRenderLoop(renderLoop);
 	</script>

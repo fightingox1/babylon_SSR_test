@@ -21,78 +21,101 @@
 	<script src="https://cdn.babylonjs.com/loaders/babylon.glTFFileLoader.js"></script>
 	<script src="https://cdn.babylonjs.com/cannon.js"></script>
 	<script>
-		const start = document.getElementById("start");
-		const canvas = document.getElementById("canvas");
-		canvas.width = window.width;
-		canvas.height = window.height;
-		const engine = new BABYLON.Engine(canvas);
-		const scene = new BABYLON.Scene(engine);
-		scene.collisionsEnabled = true;
-		const assumedFramesPerSecond = 60;
-		const earthGravity = -9.81;
-		scene.gravity = new BABYLON.Vector3(0, earthGravity / assumedFramesPerSecond, 0);
-		scene.clearColor = new BABYLON.Color3(0.6,0.6,0.6);
+var gun;
+var canvas = document.getElementById("canvas");
+canvas.width = window.width;
+canvas.height = window.height;
+const engine = new BABYLON.Engine(canvas);
+const scene = new BABYLON.Scene(engine);
+scene.clearColor = new BABYLON.Color3(0.6,0.6,0.6);
 
-		var camera = new BABYLON.UniversalCamera("camera", new BABYLON.Vector3(1,-10,-10),scene);
-		scene.activeCamera = camera;
-		scene.activeCamera.setTarget(new BABYLON.Vector3(0, -11.5, 0));
-		scene.activeCamera.attachControl(canvas, true);
+var camera = new BABYLON.UniversalCamera("camera", new BABYLON.Vector3(1,-10,-10),scene);
 
-		scene.activeCamera.keysUp.push(87);
-		scene.activeCamera.keysDown.push(83);
-		scene.activeCamera.keysLeft.push(65);
-		scene.activeCamera.keysRight.push(68);
+scene.activeCamera = camera;
+scene.activeCamera.minZ = 0;
+scene.activeCamera.setTarget(new BABYLON.Vector3(0, -11.5, 0));
+scene.activeCamera.attachControl(canvas, true);
 
-		scene.activeCamera.speed = 2;
-		scene.activeCamera.fov = 0.8;
-		scene.activeCamera.inertia = 0;
+scene.activeCamera.keysUp.push(87);
+scene.activeCamera.keysDown.push(83);
+scene.activeCamera.keysLeft.push(65);
+scene.activeCamera.keysRight.push(68);
 
-		scene.activeCamera.applyGravity = true;
-		scene.activeCamera.checkCollisions = true;
+scene.activeCamera.speed = 2;
+scene.activeCamera.fov = 0.8;
+scene.activeCamera.inertia = 0;
 
-		camera.ellipsoid = new BABYLON.Vector3(1, 0.5, 1);
+camera.ellipsoid = new BABYLON.Vector3(1, 0.5, 1);
 
-		var hemi_light = new BABYLON.HemisphericLight("HemiLight", new BABYLON.Vector3(-65, -100, 30), scene);
-		var directional_light = new BABYLON.DirectionalLight("DirectionalLight", new BABYLON.Vector3(-70, 50, 300), scene);
+var hemi_light = new BABYLON.HemisphericLight("HemiLight", new BABYLON.Vector3(-65, -100, 30), scene);
+var directional_light = new BABYLON.DirectionalLight("DirectionalLight", new BABYLON.Vector3(-70, 50, 300), scene);
 
-		var skybox = BABYLON.SceneLoader.Append("https://fightingox1.github.io/image_library/", "scene.obj", scene, function(obj){
-		});
+var skybox = BABYLON.SceneLoader.Append("https://fightingox1.github.io/image_library/", "scene.obj", scene);
 
-		BABYLON.OBJFileLoader.INVERT_Y = true;
-		var map = BABYLON.SceneLoader.Append("https://fightingox1.github.io/image_library/", "tinker.obj", scene, function(scene){
-		for(var i = 0; i < scene.meshes.length; i++){
-		scene.meshes[i].checkCollisions = true;
-		}});
+let gun_model;
+BABYLON.SceneLoader.ImportMesh("", "https://fightingox1.github.io/image_library/gun_model/", "scene.obj", scene, function (newMeshes) {
+for (var mesh in newMeshes){
+newMeshes[mesh].scaling = new BABYLON.Vector3(0.005, 0.005, 0.005);
+newMeshes[mesh].position = new BABYLON.Vector3( scene.activeCamera.position.x + 0.3, scene.activeCamera.position.y - 0.2 , scene.activeCamera.position.z + 1 );
+newMeshes[mesh].rotation.y = -3.2;
+newMeshes[mesh].rotation.x = 0.02;
+newMeshes[mesh].rotation.z = -0.025;
+newMeshes[mesh].setParent(scene.activeCamera);
+}});
 
-		function renderLoop(){
-		 scene.render();
-		}
+BABYLON.OBJFileLoader.INVERT_Y = true;
+var map = BABYLON.SceneLoader.Append("https://fightingox1.github.io/image_library/", "tinker.obj", scene);
 
-		window.addEventListener("resize", function(){
-		canvas.width = window.width;
-		canvas.height = window.height;
-		engine.resize();
-		});
+function renderLoop(){
+ scene.render();
+}
 
-		document.addEventListener("keydown", function(e){
-		if(e.key == "q"){console.log(scene.activeCamera.position.y)}
-		if(e.key == "f"){
-		var renderWidth = 1120;
-		var renderHeight = 1575
+canvas.requestPointerLock = canvas.requestPointerLock || canvas.mozRequestPointerLock;
+document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
 
-		var currentCanvasSizeWidth = canvas.style.width;
-		var currentCanvasSizeHeight = canvas.style.height;
-		canvas.style.width = renderWidth + "px";
-		canvas.style.height = renderHeight + "px";
-		engine.resize(true);
-		BABYLON.ScreenshotTools.CreateScreenshotWithResizeAsync(engine, scene.activeCamera, renderWidth, renderHeight).then(() => {
-				canvas.style.width = currentCanvasSizeWidth;
-				canvas.style.height = currentCanvasSizeHeight;
-				engine.resize(true);       
-		});}})
-		engine.runRenderLoop(renderLoop);
-		engine.switchFullscreen(true);
-		engine.enterPointerlock()
+canvas.onclick = function() {
+  canvas.requestPointerLock();
+}
+
+document.addEventListener('pointerlockchange', lockChangeAlert, false);
+document.addEventListener('mozpointerlockchange', lockChangeAlert, false);
+
+function lockChangeAlert() {
+  if(document.pointerLockElement === canvas ||
+  document.mozPointerLockElement === canvas) {
+    console.log('The pointer lock status is now locked');
+    document.addEventListener("mousemove", canvasLoop, false);
+  } else {
+    console.log('The pointer lock status is now unlocked');  
+    document.removeEventListener("mousemove", canvasLoop, false);
+  }
+}
+
+
+function canvasLoop(e) {
+  var movementX = e.movementX || e.mozMovementX || 0;
+  var movementY = e.movementY || e.mozMovementY ||  0;
+  x += movementX;
+  y += movementY; 
+  canvasDraw();
+  console.log("X position: " + x + ', Y position: ' + y);
+}
+
+window.addEventListener("resize", function(){
+canvas.width = window.width;
+canvas.height = window.height;
+engine.resize();
+});
+
+document.addEventListener("keydown", function(e){
+if(e.key == "q"){engine.switchFullscreen(true);}
+if(e.key == "f"){
+var ss = BABYLON.Tools.CreateScreenshot(engine, camera, 400);
+console.log(ss, 'ok');
+}
+});
+
+engine.runRenderLoop(renderLoop);
 	</script>
 	</body>
 </html>

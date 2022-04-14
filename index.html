@@ -21,71 +21,89 @@
 	<script src="scripts/babylon.glTFFileLoader.js"></script>
 	<script src="scripts/cannon.js"></script>
 	<script>
-	const canvas = document.getElementById("canvas");
-	canvas.width = window.width;
-	canvas.height = window.height;
-	const engine = new BABYLON.Engine(canvas);
-	const scene = new BABYLON.Scene(engine);
-	scene.clearColor = new BABYLON.Color3(0.6,0.6,0.6);
+var lights = {};
+const canvas = document.getElementById("canvas");
+canvas.width = window.width;
+canvas.height = window.height;
+const engine = new BABYLON.Engine(canvas);
+const scene = new BABYLON.Scene(engine);
+scene.clearColor = new BABYLON.Color3(0.6,0.6,0.6);
 
-	var camera = new BABYLON.UniversalCamera("camera", new BABYLON.Vector3(1,-10,-10),scene);
+var camera = new BABYLON.UniversalCamera("camera", new BABYLON.Vector3(1,-10,-10),scene);
 
-	scene.activeCamera = camera;
-	scene.activeCamera.minZ = 0;
-	scene.activeCamera.setTarget(new BABYLON.Vector3(0, -11.5, 0));
-	scene.activeCamera.attachControl(canvas, true);
+scene.activeCamera = camera;
+scene.activeCamera.minZ = 0;
+scene.activeCamera.setTarget(new BABYLON.Vector3(0, -11.5, 0));
+scene.activeCamera.attachControl(canvas, true);
 
-	scene.activeCamera.keysUp.push(87);
-	scene.activeCamera.keysDown.push(83);
-	scene.activeCamera.keysLeft.push(65);
-	scene.activeCamera.keysRight.push(68);
+scene.activeCamera.keysUp.push(87);
+scene.activeCamera.keysDown.push(83);
+scene.activeCamera.keysLeft.push(65);
+scene.activeCamera.keysRight.push(68);
 
-	scene.activeCamera.speed = 2;
-	scene.activeCamera.fov = 0.8;
-	scene.activeCamera.inertia = 0;
+scene.activeCamera.speed = 2;
+scene.activeCamera.fov = 0.8;
+scene.activeCamera.inertia = 0;
 
-	camera.ellipsoid = new BABYLON.Vector3(1, 0.5, 1);
+camera.ellipsoid = new BABYLON.Vector3(1, 0.5, 1);
+		
+		var hemi_light = new BABYLON.HemisphericLight("HemiLight", new BABYLON.Vector3(-65, -100, 10), scene);
 
-	var hemi_light = new BABYLON.HemisphericLight("HemiLight", new BABYLON.Vector3(-65, -100, 30), scene);
-	var directional_light = new BABYLON.DirectionalLight("DirectionalLight", new BABYLON.Vector3(-70, 50, 300), scene);
+    lights.light2 = new BABYLON.PointLight("light2", new BABYLON.Vector3(-400, 400, 400), scene);
+    lights.light2.intensity = 1;
+    lights.light2.direction = new BABYLON.Vector3(400, -400, -400)
+    lights.light2.shadowMinZ = 500;
+    lights.light2.shadowMaxZ = 1500;
 
-	var skybox = BABYLON.SceneLoader.Append("models/skybox/", "scene.obj", scene);
+    var shadowGenerator = new BABYLON.ShadowGenerator(1024, lights.light2);
+    shadowGenerator.useContactHardeningShadow = true;
+    shadowGenerator.bias = 0.001;
+    shadowGenerator.normalBias = 0.00001;
+    shadowGenerator.contactHardeningLightSizeUVRatio = 0.035;
+		shadowGenerator.filteringQuality = BABYLON.ShadowGenerator.QUALITY_MEDIUM;
 
-	let gun_model;
-	BABYLON.SceneLoader.ImportMesh("", "models/AR/", "scene.obj", scene, function (newMeshes) {
-	for (var mesh in newMeshes){
-	newMeshes[mesh].scaling = new BABYLON.Vector3(0.005, 0.005, 0.005);
-	newMeshes[mesh].position = new BABYLON.Vector3( scene.activeCamera.position.x + 0.3, scene.activeCamera.position.y - 0.2 , scene.activeCamera.position.z + 1 );
-	newMeshes[mesh].rotation.y = -3.2;
-	newMeshes[mesh].rotation.x = 0.02;
-	newMeshes[mesh].rotation.z = -0.025;
-	newMeshes[mesh].setParent(scene.activeCamera);
-	}});
+var skybox = BABYLON.SceneLoader.Append("models/skybox/", "scene.obj", scene);
 
-	BABYLON.OBJFileLoader.INVERT_Y = true;
-	var map = BABYLON.SceneLoader.Append("models/map/", "tinker.obj", scene);
+let gun_model;
+BABYLON.SceneLoader.ImportMesh("", "models/AR/", "scene.obj", scene, function (newMeshes) {
+for (var mesh in newMeshes){
+newMeshes[mesh].scaling = new BABYLON.Vector3(0.005, 0.005, 0.005);
+newMeshes[mesh].position = new BABYLON.Vector3( scene.activeCamera.position.x + 0.3, scene.activeCamera.position.y - 0.2 , scene.activeCamera.position.z + 1 );
+newMeshes[mesh].rotation.y = -3.2;
+newMeshes[mesh].rotation.x = 0.02;
+newMeshes[mesh].rotation.z = -0.025;
+newMeshes[mesh].setParent(scene.activeCamera);
+}});
 
-	function renderLoop(){
-	 scene.render();
-	}
+BABYLON.OBJFileLoader.INVERT_Y = true;
+var map = BABYLON.SceneLoader.ImportMesh("", "models/map/", "tinker.obj", scene, function (newMeshes) {
+for (var mesh in newMeshes){
+shadowGenerator.getShadowMap().renderList.push(newMeshes[mesh]);
+shadowGenerator.addShadowCaster(newMeshes[mesh]);
+newMeshes[mesh].receiveShadows = true;
+}});
 
-	window.addEventListener("resize", function(){
-	canvas.width = window.width;
-	canvas.height = window.height;
-	engine.resize();
-	});
+function renderLoop(){
+ scene.render();
+}
 
-	document.addEventListener("keydown", function(e){
-	if(e.key == "q"){engine.switchFullscreen(true); engine.enterPointerlock();}
-	if(e.key == "f"){
-	var ss = BABYLON.Tools.CreateScreenshot(engine, camera, 400);
-	console.log(ss, 'ok');
-	}
-	});
+window.addEventListener("resize", function(){
+canvas.width = window.width;
+canvas.height = window.height;
+engine.resize();
+});
+
+document.addEventListener("keydown", function(e){
+if(e.key == "q"){engine.switchFullscreen(true); engine.enterPointerlock();}
+if(e.key == "f"){
+var ss = BABYLON.Tools.CreateScreenshot(engine, camera, 400);
+console.log(ss, 'ok');
+}
+});
 
 
 
-	engine.runRenderLoop(renderLoop);
+engine.runRenderLoop(renderLoop);
 	</script>
 	</body>
 </html>

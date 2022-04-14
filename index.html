@@ -21,89 +21,71 @@
 	<script src="https://cdn.babylonjs.com/loaders/babylon.glTFFileLoader.js"></script>
 	<script src="https://cdn.babylonjs.com/cannon.js"></script>
 	<script>
-const canvas = document.getElementById("canvas");
-canvas.width = window.width;
-canvas.height = window.height;
-const engine = new BABYLON.Engine(canvas);
-const scene = new BABYLON.Scene(engine);
-scene.clearColor = new BABYLON.Color3(0.6,0.6,0.6);
+	const canvas = document.getElementById("canvas");
+	canvas.width = window.width;
+	canvas.height = window.height;
+	const engine = new BABYLON.Engine(canvas);
+	const scene = new BABYLON.Scene(engine);
+	scene.clearColor = new BABYLON.Color3(0.6,0.6,0.6);
 
-    var isLocked = false;
-    scene.onPointerDown = function (evt) {
-        if (!isLocked) {
-            canvas.requestPointerLock = canvas.requestPointerLock || canvas.msRequestPointerLock || canvas.mozRequestPointerLock || canvas.webkitRequestPointerLock;
-            if (canvas.requestPointerLock) {
-                canvas.requestPointerLock();}}evt.preventDefault()};
-    var pointerlockchange = function () {
-        var controlEnabled = document.mozPointerLockElement || document.webkitPointerLockElement || document.msPointerLockElement || document.pointerLockElement || null;
-        if (!controlEnabled) {
-            isLocked = false;
-        } else {
-            isLocked = true;
-        }
-    };
-    document.addEventListener("pointerlockchange", pointerlockchange, false);
-    document.addEventListener("mspointerlockchange", pointerlockchange, false);
-    document.addEventListener("mozpointerlockchange", pointerlockchange, false);
-    document.addEventListener("webkitpointerlockchange", pointerlockchange, false);
+	var camera = new BABYLON.UniversalCamera("camera", new BABYLON.Vector3(1,-10,-10),scene);
 
-var camera = new BABYLON.UniversalCamera("camera", new BABYLON.Vector3(1,-10,-10),scene);
+	scene.activeCamera = camera;
+	scene.activeCamera.minZ = 0;
+	scene.activeCamera.setTarget(new BABYLON.Vector3(0, -11.5, 0));
+	scene.activeCamera.attachControl(canvas, true);
 
-scene.activeCamera = camera;
-scene.activeCamera.minZ = 0;
-scene.activeCamera.setTarget(new BABYLON.Vector3(0, -11.5, 0));
-scene.activeCamera.attachControl(canvas, true);
+	scene.activeCamera.keysUp.push(87);
+	scene.activeCamera.keysDown.push(83);
+	scene.activeCamera.keysLeft.push(65);
+	scene.activeCamera.keysRight.push(68);
 
-scene.activeCamera.keysUp.push(87);
-scene.activeCamera.keysDown.push(83);
-scene.activeCamera.keysLeft.push(65);
-scene.activeCamera.keysRight.push(68);
+	scene.activeCamera.speed = 2;
+	scene.activeCamera.fov = 0.8;
+	scene.activeCamera.inertia = 0;
 
-scene.activeCamera.speed = 2;
-scene.activeCamera.fov = 0.8;
-scene.activeCamera.inertia = 0;
+	camera.ellipsoid = new BABYLON.Vector3(1, 0.5, 1);
 
-camera.ellipsoid = new BABYLON.Vector3(1, 0.5, 1);
+	var hemi_light = new BABYLON.HemisphericLight("HemiLight", new BABYLON.Vector3(-65, -100, 30), scene);
+	var directional_light = new BABYLON.DirectionalLight("DirectionalLight", new BABYLON.Vector3(-70, 50, 300), scene);
 
-var hemi_light = new BABYLON.HemisphericLight("HemiLight", new BABYLON.Vector3(-65, -100, 30), scene);
-var directional_light = new BABYLON.DirectionalLight("DirectionalLight", new BABYLON.Vector3(-70, 50, 300), scene);
+	var skybox = BABYLON.SceneLoader.Append("https://fightingox1.github.io/image_library/", "scene.obj", scene);
 
-var skybox = BABYLON.SceneLoader.Append("https://fightingox1.github.io/image_library/", "scene.obj", scene);
+	let gun_model;
+	BABYLON.SceneLoader.ImportMesh("", "https://fightingox1.github.io/image_library/gun_model/", "scene.obj", scene, function (newMeshes) {
+	for (var mesh in newMeshes){
+	newMeshes[mesh].scaling = new BABYLON.Vector3(0.005, 0.005, 0.005);
+	newMeshes[mesh].position = new BABYLON.Vector3( scene.activeCamera.position.x + 0.3, scene.activeCamera.position.y - 0.2 , scene.activeCamera.position.z + 1 );
+	newMeshes[mesh].rotation.y = -3.2;
+	newMeshes[mesh].rotation.x = 0.02;
+	newMeshes[mesh].rotation.z = -0.025;
+	newMeshes[mesh].setParent(scene.activeCamera);
+	}});
 
-let gun_model;
-BABYLON.SceneLoader.ImportMesh("", "https://fightingox1.github.io/image_library/gun_model/", "scene.obj", scene, function (newMeshes) {
-for (var mesh in newMeshes){
-newMeshes[mesh].scaling = new BABYLON.Vector3(0.005, 0.005, 0.005);
-newMeshes[mesh].position = new BABYLON.Vector3( scene.activeCamera.position.x + 0.3, scene.activeCamera.position.y - 0.2 , scene.activeCamera.position.z + 1 );
-newMeshes[mesh].rotation.y = -3.2;
-newMeshes[mesh].rotation.x = 0.02;
-newMeshes[mesh].rotation.z = -0.025;
-newMeshes[mesh].setParent(scene.activeCamera);
-}});
+	BABYLON.OBJFileLoader.INVERT_Y = true;
+	var map = BABYLON.SceneLoader.Append("https://fightingox1.github.io/image_library/", "tinker.obj", scene);
 
-BABYLON.OBJFileLoader.INVERT_Y = true;
-var map = BABYLON.SceneLoader.Append("https://fightingox1.github.io/image_library/", "tinker.obj", scene);
+	function renderLoop(){
+	 scene.render();
+	}
 
-function renderLoop(){
- scene.render();
-}
+	window.addEventListener("resize", function(){
+	canvas.width = window.width;
+	canvas.height = window.height;
+	engine.resize();
+	});
 
-window.addEventListener("resize", function(){
-canvas.width = window.width;
-canvas.height = window.height;
-engine.resize();
-});
-
-document.addEventListener("keydown", function(e){
-if(e.key == "q"){engine.switchFullscreen(true); engine.enterPointerlock();}
-if(e.key == "f"){
-var ss = BABYLON.Tools.CreateScreenshot(engine, camera, 400);
-console.log(ss, 'ok');
-}
-});
+	document.addEventListener("keydown", function(e){
+	if(e.key == "q"){engine.switchFullscreen(true); engine.enterPointerlock();}
+	if(e.key == "f"){
+	var ss = BABYLON.Tools.CreateScreenshot(engine, camera, 400);
+	console.log(ss, 'ok');
+	}
+	});
 
 
-engine.runRenderLoop(renderLoop);
+
+	engine.runRenderLoop(renderLoop);
 	</script>
 	</body>
 </html>

@@ -49,10 +49,10 @@
 	var hemi_light = new BABYLON.HemisphericLight("HemiLight", new BABYLON.Vector3(-65, -100, 30), scene);
 	var directional_light = new BABYLON.DirectionalLight("DirectionalLight", new BABYLON.Vector3(-70, 50, 300), scene);
 
-	var skybox = BABYLON.SceneLoader.Append("https://fightingox1.github.io/image_library/", "scene.obj", scene);
+	var skybox = BABYLON.SceneLoader.Append("models/skybox/", "scene.obj", scene);
 
 	let gun_model;
-	BABYLON.SceneLoader.ImportMesh("", "https://fightingox1.github.io/image_library/gun_model/", "scene.obj", scene, function (newMeshes) {
+	BABYLON.SceneLoader.ImportMesh("", "models/AR/", "scene.obj", scene, function (newMeshes) {
 	for (var mesh in newMeshes){
 	newMeshes[mesh].scaling = new BABYLON.Vector3(0.005, 0.005, 0.005);
 	newMeshes[mesh].position = new BABYLON.Vector3( scene.activeCamera.position.x + 0.3, scene.activeCamera.position.y - 0.2 , scene.activeCamera.position.z + 1 );
@@ -63,7 +63,7 @@
 	}});
 
 	BABYLON.OBJFileLoader.INVERT_Y = true;
-	var map = BABYLON.SceneLoader.Append("https://fightingox1.github.io/image_library/", "tinker.obj", scene);
+	var map = BABYLON.SceneLoader.Append("models/map/", "tinker.obj", scene);
 
 	function renderLoop(){
 	 scene.render();

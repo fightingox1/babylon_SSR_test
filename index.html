@@ -68,7 +68,7 @@ let gun_model;
 BABYLON.SceneLoader.ImportMesh("", "models/AR/", "scene.obj", scene, function (newMeshes) {
 for (var mesh in newMeshes){
 newMeshes[mesh].position = new BABYLON.Vector3( scene.activeCamera.position.x + 0.2, scene.activeCamera.position.y - 0.2 , scene.activeCamera.position.z + 0.7 );
-newMeshes[mesh].rotation.y = -1.62921;
+newMeshes[mesh].rotation.y = -3.2;
 newMeshes[mesh].rotation.x = -0.02;
 newMeshes[mesh].rotation.z = -0.025;
 newMeshes[mesh].setParent(scene.activeCamera);
